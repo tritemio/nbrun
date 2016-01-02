@@ -51,15 +51,15 @@ the default arguments.
 
 The dict containing input arguments is converted to a string containing
 python-code which assigns a variable for each argument. For this reason, you
-cannot pass arbitrary objects, but only objects with a representation
-"literal representation" (using `repr()`).
-For example, arguments can be strings, numbers and tuple/list/dict of strings
-and numbers. But you cannot pass a function. Given the typical use-case,
-this limitation is not very important.
+cannot pass arbitrary objects, but only objects with a complete
+"literal representation" (i.e. using `repr()`).
+Arguments can be strings, numbers and tuple/list/dict of strings
+and numbers, but cannot be a function, for example. Given the typical use-case,
+this limitation is not very critical.
 
 Also, differently from calling a real python function, no check is performed 
 on the input arguments. There is not formal "notebook signature", analogous 
 of the function signature. The user needs to make sure she/he is passing the 
-right arguments when calling/executing a notebook. In the future, a "signature"
+right arguments when calling/executing a notebook. As a future idea, a "signature"
 can be embedded in the template notebook metadata, and checked by
 `run_notebook()` before executing the notebook.

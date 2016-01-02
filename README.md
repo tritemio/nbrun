@@ -1,7 +1,7 @@
 # nbrun
 
 Batch-run Jupyter IPython notebooks (optionally) passing arguments. Nbrun
-contains a single function (`run_notebook`) which allows to call/execute a
+contains a single function (`run_notebook()`) which allows to call/execute a
 notebook, optionally passing arguments, roughly similar to passing arguments
 to a function.
 
@@ -29,12 +29,12 @@ template is executed with a particular set of arguments, it is saved to disk. At
 the end we obtain a fully executed notebook for each dataset/arguments, and a
 single template notebook to modify when we fix/improve the analysis.
 
-# How
+# Implementation
 
 The mechanism is rudimentary. The input arguments are contained in a
 dictionary. The function `run_notebook` inserts a code cell after the first cell
 of the template notebook with a series of variable assignments which correspond
-to the arguments dictionary. For example, if we pass `{'data_id': 1}`, the
+to the arguments in the dictionary. For example, if we pass `{'data_id': 1}`, the
 following code cell will be inserted:
 
 ```
@@ -42,20 +42,24 @@ data_id = 1
 ```
 
 Why after the first cell? Conventionally, the template notebook contains
-assignment to variables used as "input arguments" in the first cell. This are
+assignment to variables used as "input arguments" in the first cell. These are
 the default values and allow the template notebook to be executed independently.
-When we pass an argument this will be inserted in the second cell, overriding
+When we pass an argument, it will be inserted in the second cell, overriding
 the default arguments.
 
 # Limitations
 
-The input arguments are transformed in a series of assignments, which needs to
-be some valid python code. For this reason, you can not pass arbitrary objects
-but only objects whose representation (`repr`) is a "literal representation".
+The dict containing input arguments is converted to a string containing
+python-code which assigns a variable for each argument. For this reason, you
+cannot pass arbitrary objects, but only objects with a representation
+"literal representation" (using `repr()`).
 For example, arguments can be strings, numbers and tuple/list/dict of strings
-and numbers. This is more than enough to cover the use-case.
+and numbers. But you cannot pass a function. Given the typical use-case,
+this limitation is not very important.
 
-Also, differently from calling a real function, no check is performed on the
-input arguments. There is not formal "notebook signature" (like function
-signature). The user needs to make sure she/he is passing the right arguments
-when calling/executing a notebook.
+Also, differently from calling a real python function, no check is performed 
+on the input arguments. There is not formal "notebook signature", analogous 
+of the function signature. The user needs to make sure she/he is passing the 
+right arguments when calling/executing a notebook. In the future, a "signature"
+can be embedded in the template notebook metadata, and checked by
+`run_notebook()` before executing the notebook.

@@ -38,9 +38,8 @@ def dict_to_code(mapping):
              for key, value in mapping.items())
     return '\n'.join(lines)
 
-def run_notebook(notebook_name, nb_suffix='-out', out_path='.',
-                 timeout=3600, nb_kwargs=None, insert_pos=1,
-                 execute_kwargs=None):
+def run_notebook(notebook_name, nb_suffix='-out', out_path='.', nb_kwargs=None,
+                 insert_pos=1, timeout=3600, execute_kwargs=None):
     """Runs a notebook and saves the output in a new notebook.
 
     Executes a notebook, optionally passing "arguments" in a way roughly
@@ -56,19 +55,20 @@ def run_notebook(notebook_name, nb_suffix='-out', out_path='.',
 
     Arguments:
         notebook_name (string): name of the notebook to be executed.
+        nb_suffix (string): suffix to append to the file name of the executed
+            notebook.
         nb_kwargs (dict or None): If not None, this dict is converted to a
             string of python assignments with keys representing variables
             names and values variables content. This string is inserted as
             code-cell in the notebook to be executed.
-        nb_suffix (string): suffix to append to the file name of the executed
-            notebook.
-        insert_pos (int): position of insertion of the code-cell with
-            arguments. Default is 1 (i.e. second cell). With this default,
-            the input notebook can define default values of input arguments
-            that are used when the notebook is manually executed (through the
-            Jupyter GUI). Inserting these arguments as seconds cell we can
-            override these default values.
+        insert_pos (int): position of insertion of the code-cell containing
+            the input arguments. Default is 1 (i.e. second cell). With this
+            default, the input notebook can define, in the first cell, default
+            values of input arguments (used when the notebook is executed
+            with no arguments or through the Notebook GUI).
         timeout (int): timeout in seconds after which the execution is aborted.
+        execute_kwargs (dict): additional arguments passed to
+            `ExecutePreprocessor`.
         out_path (string): folder where to save the output notebook.
     """
     timestamp_cell = "**Executed:** %s\n\n**Duration:** %d seconds."
@@ -92,7 +92,7 @@ def run_notebook(notebook_name, nb_suffix='-out', out_path='.',
     start_time = time.time()
     try:
         # Execute the notebook
-        out = ep.preprocess(nb, {'metadata': {'path': './'}})
+        ep.preprocess(nb, {'metadata': {'path': './'}})
     except:
         # Execution failed, print a message then raise.
         msg = 'Error executing the notebook "%s".\n\n' % notebook_name

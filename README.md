@@ -5,7 +5,7 @@ contains a single function (`run_notebook`) which allows to call/execute a
 notebook, optionally passing arguments, roughly similar to passing arguments
 to a function.
 
-Nbrun is a small function built on [nbconvert](https://github.com/jupyter/nbconvert).
+Nbrun is a small wapper function around [nbconvert](https://github.com/jupyter/nbconvert).
 
 # Usage
 

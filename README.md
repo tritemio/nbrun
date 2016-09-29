@@ -1,6 +1,7 @@
 # nbrun
 
-Batch-run Jupyter IPython notebooks (optionally) passing arguments. Nbrun
+Batch-run Jupyter IPython notebooks (optionally) passing arguments
+a.k.a. running a notebook from another notebook. Nbrun
 contains a single function (`run_notebook()`) which allows to call/execute a
 notebook, optionally passing arguments, roughly similar to passing arguments
 to a function.

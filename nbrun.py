@@ -38,7 +38,7 @@ def dict_to_code(mapping):
              for key, value in mapping.items())
     return '\n'.join(lines)
 
-def run_notebook(notebook_name, nb_suffix='-out', out_path='.', nb_kwargs=None,
+def run_notebook(notebook_name, template_path='.', nb_suffix='-out', out_path='.', nb_kwargs=None,
                  insert_pos=1, timeout=3600, execute_kwargs=None):
     """Runs a notebook and saves the output in a new notebook.
 
@@ -55,6 +55,7 @@ def run_notebook(notebook_name, nb_suffix='-out', out_path='.', nb_kwargs=None,
 
     Arguments:
         notebook_name (string): name of the notebook to be executed.
+        template_path (string): directory containing the template notebook to be executed
         nb_suffix (string): suffix to append to the file name of the executed
             notebook.
         nb_kwargs (dict or None): If not None, this dict is converted to a
@@ -77,7 +78,7 @@ def run_notebook(notebook_name, nb_suffix='-out', out_path='.', nb_kwargs=None,
         code = dict_to_code(nb_kwargs)
         code_cell = '\n'.join((header, code))
 
-    nb_name_input = notebook_name + '.ipynb'
+    nb_name_input = os.path.join(template_path, notebook_name + '.ipynb')
     nb_name_output = notebook_name + '%s.ipynb' % nb_suffix
     nb_name_output = os.path.join(out_path, nb_name_output)
     display(FileLink(nb_name_input))

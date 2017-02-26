@@ -12,6 +12,7 @@ execute the other notebooks.
 
 import os
 import time
+from pathlib import Path
 from IPython.display import display, FileLink
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
@@ -39,7 +40,7 @@ def dict_to_code(mapping):
     return '\n'.join(lines)
 
 
-def run_notebook(notebook_name, template_path='.', out_path='.',
+def run_notebook(notebook_path, out_path=None,
                  nb_suffix='-out', nb_kwargs=None, hide_input=True,
                  insert_pos=1, timeout=3600, execute_kwargs=None, ):
     """Runs a notebook and saves the output in a new notebook.
@@ -56,9 +57,8 @@ def run_notebook(notebook_name, template_path='.', out_path='.',
     markdown cell at the beginning of the notebook.
 
     Arguments:
-        notebook_name (string): name of the notebook to be executed.
-        template_path (string): directory containing the template notebook
-            to be executed.
+        notebook_path (path-like object): path of the notebook to be
+            executed. Valid values are strings or pathlib.Path objects.
         nb_suffix (string): suffix to append to the file name of the executed
             notebook.
         nb_kwargs (dict or None): If not None, this dict is converted to a
@@ -73,7 +73,9 @@ def run_notebook(notebook_name, template_path='.', out_path='.',
         timeout (int): timeout in seconds after which the execution is aborted.
         execute_kwargs (dict): additional arguments passed to
             `ExecutePreprocessor`.
-        out_path (string): folder where to save the output notebook.
+        out_path (path-like or None): folder where to save the output
+            notebook. If None, saves the notebook in the same folder as
+            the template. Valid values are strings or pathlib.Path objects.
         hide_input (bool): whether to create a notebook with input cells
             hidden (useful to remind user that the auto-generated output
             is not meant to have the code edited.
@@ -85,15 +87,23 @@ def run_notebook(notebook_name, template_path='.', out_path='.',
         code = dict_to_code(nb_kwargs)
         code_cell = '\n'.join((header, code))
 
-    nb_name_input = os.path.join(template_path, notebook_name + '.ipynb')
-    nb_name_output = notebook_name + '%s.ipynb' % nb_suffix
-    nb_name_output = os.path.join(out_path, nb_name_output)
-    display(FileLink(nb_name_input))
+    notebook_path = Path(notebook_path)
+    if not notebook_path.is_file():
+        raise FileNotFoundError("Path '%s' not found." % notebook_path)
+
+    if out_path is None:
+        out_path = notebook_path.parent
+    out_path = Path(out_path)
+    if not out_path.exists():
+        raise FileNotFoundError("Output path '%s' not found." % out_path)
+    out_notebook_path = (out_path /
+                         ('%s%s.ipynb' % (notebook_path.stem, nb_suffix)))
+    display(FileLink(str(notebook_path)))
 
     if execute_kwargs is None:
         execute_kwargs = {}
     ep = ExecutePreprocessor(timeout=timeout, **execute_kwargs)
-    nb = nbformat.read(nb_name_input, as_version=4)
+    nb = nbformat.read(str(notebook_path), as_version=4)
 
     if hide_input:
         nb["metadata"].update({"hide_input": True})
@@ -107,16 +117,17 @@ def run_notebook(notebook_name, template_path='.', out_path='.',
         ep.preprocess(nb, {'metadata': {'path': './'}})
     except:
         # Execution failed, print a message then raise.
-        msg = 'Error executing the notebook "%s".\n\n' % notebook_name
-        msg += 'See notebook "%s" for the traceback.' % nb_name_output
+        msg = 'Error executing the notebook "%s".\n\n' % notebook_path
+        msg += 'See notebook "%s" for the traceback.' % out_notebook_path
         print(msg)
         raise
     else:
         # On successful execution, add timestamping cell
         duration = time.time() - start_time
-        timestamp_cell = timestamp_cell % (time.ctime(start_time), duration, nb_name_input, nb_name_input)
+        timestamp_cell = timestamp_cell % (time.ctime(start_time), duration,
+                                           notebook_path, out_notebook_path)
         nb['cells'].insert(0, nbformat.v4.new_markdown_cell(timestamp_cell))
     finally:
         # Save the notebook even when it raises an error
-        nbformat.write(nb, nb_name_output)
-        display(FileLink(nb_name_output))
+        nbformat.write(nb, str(out_notebook_path))
+        display(FileLink(str(out_notebook_path)))

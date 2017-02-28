@@ -10,7 +10,6 @@ Copy this file in the folder containing the master notebook used to
 execute the other notebooks.
 """
 
-import os
 import time
 from pathlib import Path
 from IPython.display import display, FileLink

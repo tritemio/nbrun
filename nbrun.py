@@ -108,7 +108,7 @@ def run_notebook(notebook_path, out_path=None,
         nb["metadata"].update({"hide_input": True})
 
     if len(nb_kwargs) > 0:
-        nb['cells'].insert(1, nbformat.v4.new_code_cell(code_cell))
+        nb['cells'].insert(insert_pos, nbformat.v4.new_code_cell(code_cell))
 
     start_time = time.time()
     try:

@@ -64,3 +64,31 @@ of the function signature. The user needs to make sure she/he is passing the
 right arguments when calling/executing a notebook. As a future idea, a "signature"
 can be embedded in the template notebook metadata, and checked by
 `run_notebook()` before executing the notebook.
+
+# Development
+*nbrun* contains only a single function ``run_notebook`` to run notebooks.
+There is also a small helper function used internally to convert a dict
+of arguments to python assignments.
+
+At the moment you have to copy the file ``nbrun.py`` into you project folder.
+Maybe I'll turn it into a python package one day (PR welcome!).
+
+Some users asked about future development. I don't think there is much functionality 
+left to be added. So, I don't forsee big changes in the future except for compatibility 
+fixes and small API tweaks.
+
+# Alternatives
+
+- [runipy](https://github.com/paulgb/runipy)
+- [nbparameterise](https://github.com/takluyver/nbparameterise)
+
+**Runipy** was the first tool to provide batch execution of notebooks, even before Jupyter
+was born from IPython. Nowadays most of the funtionality is included in nbconvert.
+With runipy you can pass arguments to notebooks only thorugh environment variables.
+
+**nbparameterise** uses AST instead of eval to pass arguments (which is a safer and more robust choice).
+However the code is much more complex and, last time I checked, it didn't support passing list or dict
+as arguments.
+I thought about improving nbparameterise but at the end I didn't find the time 
+since nbrun was already working for my use case.
+

@@ -1,4 +1,4 @@
-# Copyright (c) 2015 Antonino Ingargiola
+# Copyright (c) 2015-2017 Antonino Ingargiola
 # License: MIT
 """
 nbrun - Run an Jupyter/IPython notebook, optionally passing arguments.
@@ -7,7 +7,8 @@ USAGE
 -----
 
 Copy this file in the folder containing the master notebook used to
-execute the other notebooks.
+execute the other notebooks. Then use `run_notebook()` to execute
+notebooks.
 """
 
 import time
@@ -15,6 +16,9 @@ from pathlib import Path
 from IPython.display import display, FileLink
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
+from nbconvert import HTMLExporter
+
+__version__ = '0.2'
 
 
 def dict_to_code(mapping):
@@ -39,45 +43,60 @@ def dict_to_code(mapping):
     return '\n'.join(lines)
 
 
-def run_notebook(notebook_path, out_path=None,
-                 nb_suffix='-out', nb_kwargs=None, hide_input=True,
-                 insert_pos=1, timeout=3600, execute_kwargs=None, ):
+def run_notebook(notebook_path, out_notebook_path=None, suffix='-out',
+                 working_dir='./',
+                 nb_kwargs=None, insert_pos=1, hide_input=False,
+                 timeout=3600, kernel_name=None, execute_kwargs=None,
+                 display_links=True, save_html=False):
     """Runs a notebook and saves the output in a new notebook.
 
     Executes a notebook, optionally passing "arguments" in a way roughly
     similar to passing arguments to a function.
     Notebook arguments are passed in a dictionary (`nb_kwargs`) which is
-    converted to a string containing python code, then inserted in the notebook
-    as a code cell. The code contains only assignments of variables which
-    can be used to control the execution of a suitably written notebook. When
-    calling a notebook, you need to know which arguments (variables) to pass.
-    Differently from functions, no check on the input arguments is performed.
-    The "notebook signature" is only informally declared in a conventional
-    markdown cell at the beginning of the notebook.
+    converted to a python string containing assignments. This string is
+    inserted in the template notebook as a code cell. The code assigns
+    variables which can be used to control the execution. When "calling"
+    a notebook, you need to know which arguments (variables) to pass.
+    Unlike normal python functions, no check is performed on the input
+    arguments. For sanity, we recommended describing the variables that
+    can be assigned using a markdown cell at the beginning of each template
+    notebook.
 
     Arguments:
-        notebook_path (path-like object): path of the notebook to be
-            executed. Valid values are strings or pathlib.Path objects.
-        nb_suffix (string): suffix to append to the file name of the executed
-            notebook.
+        notebook_path (pathlib.Path or string): input notebook filename.
+            This is the notebook to be executed (i.e. template notebook).
+        out_notebook_path (pathlib.Path or string or None): output notebook
+            file name. If None, the ouput notebook has the same name as the
+            input notebook plus a suffix, specified by the `suffix` argument.
+            If not None, `suffix` is ignored. By specifying a full path,
+            the output notebook can be saved in a different folder than the
+            input notebook.
+        working_dir (string or Path): the folder the kernel is started into.
+        suffix (string): suffix to append to the file name of the executed
+            notebook. Argument ignored if `out_notebook_path` is not None.
         nb_kwargs (dict or None): If not None, this dict is converted to a
-            string of python assignments with keys representing variables
-            names and values variables content. This string is inserted as
-            code-cell in the notebook to be executed.
+            string of python assignments using the dict keys as variables
+            names and the dict values as variables content. This string is
+            inserted as code-cell in the notebook to be executed.
         insert_pos (int): position of insertion of the code-cell containing
             the input arguments. Default is 1 (i.e. second cell). With this
             default, the input notebook can define, in the first cell, default
             values of input arguments (used when the notebook is executed
             with no arguments or through the Notebook GUI).
-        timeout (int): timeout in seconds after which the execution is aborted.
+        timeout (int): max execution time (seconds) for each cell before the
+            execution is aborted.
+        kernel_name (string or None): name of the kernel used to execute the
+            notebook. Use the default kernel if None.
         execute_kwargs (dict): additional arguments passed to
             `ExecutePreprocessor`.
-        out_path (path-like or None): folder where to save the output
-            notebook. If None, saves the notebook in the same folder as
-            the template. Valid values are strings or pathlib.Path objects.
         hide_input (bool): whether to create a notebook with input cells
             hidden (useful to remind user that the auto-generated output
             is not meant to have the code edited.
+        display_links (bool): if True, display/print "link" of template and
+            output notebooks. Links are only rendered in a notebook.
+            In a text terminal, links are displayed as full file names.
+        save_html (bool): save an additional HTML version of the output
+            notebook. Default False.
     """
     timestamp_cell = ("**Executed:** %s\n\n**Duration:** %d seconds.\n\n"
                       "**Autogenerated from:** [%s](%s)")
@@ -90,18 +109,20 @@ def run_notebook(notebook_path, out_path=None,
     if not notebook_path.is_file():
         raise FileNotFoundError("Path '%s' not found." % notebook_path)
 
-    if out_path is None:
-        out_path = notebook_path.parent
-    out_path = Path(out_path)
-    if not out_path.exists():
-        raise FileNotFoundError("Output path '%s' not found." % out_path)
-    out_notebook_path = (out_path /
-                         ('%s%s.ipynb' % (notebook_path.stem, nb_suffix)))
-    display(FileLink(str(notebook_path)))
+    if out_notebook_path is None:
+            out_notebook_path = Path(notebook_path.parent,
+                                     notebook_path.stem + suffix + '.ipynb')
+    out_notebook_path = Path(out_notebook_path)
+    if not out_notebook_path.parent.exists():
+        raise FileNotFoundError("Output path '%s' not found." %
+                                out_notebook_path.parent)
+    if display_links:
+        display(FileLink(str(notebook_path)))
 
     if execute_kwargs is None:
         execute_kwargs = {}
-    ep = ExecutePreprocessor(timeout=timeout, **execute_kwargs)
+    execute_kwargs.update(timeout=timeout, kernel_nale=kernel_name)
+    ep = ExecutePreprocessor(**execute_kwargs)
     nb = nbformat.read(str(notebook_path), as_version=4)
 
     if hide_input:
@@ -113,11 +134,13 @@ def run_notebook(notebook_path, out_path=None,
     start_time = time.time()
     try:
         # Execute the notebook
-        ep.preprocess(nb, {'metadata': {'path': './'}})
+        ep.preprocess(nb, {'metadata': {'path': working_dir}})
     except:
         # Execution failed, print a message then raise.
-        msg = 'Error executing the notebook "%s".\n\n' % notebook_path
-        msg += 'See notebook "%s" for the traceback.' % out_notebook_path
+        msg = ('Error executing the notebook "%s".\n'
+               'Notebook arguments: %s\n\n'
+               'See notebook "%s" for the traceback.' %
+               (notebook_path, str(nb_kwargs), out_notebook_path))
         print(msg)
         raise
     else:
@@ -129,4 +152,10 @@ def run_notebook(notebook_path, out_path=None,
     finally:
         # Save the notebook even when it raises an error
         nbformat.write(nb, str(out_notebook_path))
-        display(FileLink(str(out_notebook_path)))
+        if display_links:
+            display(FileLink(str(out_notebook_path)))
+        if save_html:
+            html_exporter = HTMLExporter()
+            body, resources = html_exporter.from_notebook_node(nb)
+            with open(str(out_notebook_path.with_suffix('.html')), 'w') as f:
+                f.write(body)

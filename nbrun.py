@@ -144,16 +144,17 @@ def run_notebook(notebook_path, out_notebook_path=None, suffix='-out',
                'See notebook "%s" for the traceback.' %
                (notebook_path, str(nb_kwargs), out_notebook_path))
         print(msg)
+        timestamp_cell += '\n\nError occurred during execution. See below.'
         raise
-    else:
-        # On successful execution, add timestamping cell
+    finally:
+        # Add timestamping cell
         duration = time.time() - start_time
         timestamp_cell = timestamp_cell % (time.ctime(start_time), duration,
                                            notebook_path, out_notebook_path)
         nb['cells'].insert(0, nbformat.v4.new_markdown_cell(timestamp_cell))
-    finally:
-        # Save the notebook even when it raises an error
-        nbformat.write(nb, str(out_notebook_path))
+        # Save the executed notebook to disk
+        if save_ipynb:
+            nbformat.write(nb, str(out_notebook_path))
         if display_links:
             display(FileLink(str(out_notebook_path)))
         if save_html:

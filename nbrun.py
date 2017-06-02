@@ -55,13 +55,13 @@ def run_notebook(notebook_path, nb_kwargs=None, suffix='-out',
     Executes a notebook, optionally passing "arguments"
     similarly to passing arguments to a function.
     Notebook arguments are passed in a dictionary (`nb_kwargs`) which is
-    converted to a python string containing assignments. This string is
+    converted into a string containing python assignments. This string is
     inserted in the template notebook as a code cell. The code assigns
     variables which can be used to control the execution. When "calling"
     a notebook, you need to know which arguments (variables) to pass.
     Unlike normal python functions, no check is performed on the input
     arguments. For sanity, we recommended describing the variables that
-    can be assigned using a markdown cell at the beginning of each template
+    can be assigned using a markdown cell at the beginning of the template
     notebook.
 
     Arguments:

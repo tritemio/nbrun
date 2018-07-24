@@ -1,10 +1,14 @@
 # nbrun
 
-Batch-run Jupyter IPython notebooks (optionally) passing arguments
-a.k.a. running a notebook from another notebook. Nbrun
-contains a single function (`run_notebook()`) which allows to call/execute a
-notebook, optionally passing arguments, roughly similar to passing arguments
-to a function.
+Nbrun automates the execution of Jupyter Notebooks from other notebooks,
+passing arguments for parametrization. 
+Nbrun offers a simple yet effective way to remove code duplication 
+and manual steps, allowing to build automated and self-documented 
+analysis pipelines.
+
+Nbrun contains a single function (`run_notebook()`) which allows to call/execute
+notebooks, optionally passing arguments. With nbrun, you can call a notebook
+with arguments, similarly to calling a function with arguments.
 
 Nbrun is a small wapper function around [nbconvert](https://github.com/jupyter/nbconvert).
 
@@ -32,7 +36,7 @@ single template notebook to modify when we fix/improve the analysis.
 
 # Implementation
 
-The mechanism is rudimentary. The input arguments are contained in a
+The mechanism is "low-tech", yet effective. The input arguments are contained in a
 dictionary. The function `run_notebook` inserts a code cell after the first cell
 of the template notebook with a series of variable assignments which correspond
 to the arguments in the dictionary. For example, if we pass `{'data_id': 1}`, the

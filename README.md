@@ -1,14 +1,16 @@
 # nbrun
 
-Nbrun automates the execution of Jupyter Notebooks from other notebooks,
+Nbrun automates the execution of Jupyter Notebooks,
 passing arguments for parametrization. 
 Nbrun offers a simple yet effective way to remove code duplication 
 and manual steps, allowing to build automated and self-documented 
-analysis pipelines.
+analysis pipelines. 
 
 Nbrun contains a single function (`run_notebook()`) which allows to call/execute
 notebooks, optionally passing arguments. With nbrun, you can call a notebook
 with arguments, similarly to calling a function with arguments.
+When called from a notebook, `run_notebook()` shows links to the template and executed
+notebooks.
 
 Nbrun is a small wapper function around [nbconvert](https://github.com/jupyter/nbconvert).
 

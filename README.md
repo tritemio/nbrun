@@ -76,7 +76,7 @@ can be embedded in the template notebook metadata, and checked by
 There is also a small helper function used internally to convert a dict
 of arguments to python assignments.
 
-At the moment you have to copy the file ``nbrun.py`` into you project folder.
+At the moment you have to copy the file ``nbrun.py`` into your project folder.
 Maybe I'll turn it into a python package one day (PR welcome!).
 
 Some users asked about future development. I don't think there is much functionality 
